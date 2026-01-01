@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="shortcut icon" href="/images/task.ico" type="image/x-icon" />
+    <title>Inicio</title>
+    <link rel="stylesheet" href="/css/app.css" />
+    <script src="/js/dice.js" defer></script>
+  </head>
+  <body>
+    <% if(user.photo) { %>
+    <h1><%= user.displayName %></h1>
+    <img
+      src="<%= user.photo %>"
+      alt="Foto de perfil"
+      width="100"
+      class="profile-photo"
+    />
+    <% } %>
+
+    <!--   <p>Email: <%= user.email %></p> -->
+    <a href="/auth/logout"><button>Salir</button></a>
+
+    <br />
+
+    <!-- AGREGAR FAMILIAR -->
+    <div class="family-container">
+      <button id="toggleFamilyForm">Agregar miembro de la familia</button>
+
+      <div class="family-form" id="familyForm">
+        <input type="text" id="familyName" placeholder="Nombre o rol" />
+        <input type="email" id="familyEmail" placeholder="Email" />
+        <button id="addFamily">Agregar</button>
+      </div>
+    </div>
+
+    <!-- SELECCIONAR FAMILIAR -->
+    <div class="family-select">
+      <h2>Seleccionar miembro</h2>
+      <select id="familySelect">
+        <option value="">Yo mismo</option>
+        <% user.family.forEach(f => { %>
+        <option value="<%= f.email %>"><%= f.name %> (<%= f.email %>)</option>
+        <% }) %>
+      </select>
+    </div>
+
+    <button id="rollDice">Lanzar dado</button>
+    <button id="clearHistory">Borrar historial</button>
+
+    <p id="diceResult">Resultado: -</p>
+
+    <div class="history">
+      <h2>Tareas lanzadas</h2>
+      <ul id="taskHistory">
+        <% if(user.tasks.length === 0) { %>
+        <li>No hay tareas lanzadas aún</li>
+        <% } else { %> <% user.tasks.forEach(task => { %>
+        <li><strong><%= task.title %></strong><br /><%= task.description %></li>
+        <% }) %> <% } %>
+      </ul>
+    </div>
+  </body>
+</html>

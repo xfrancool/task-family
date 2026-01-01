@@ -1,0 +1,154 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: "Nunito", sans-serif;
+}
+
+body {
+  background: linear-gradient(to right, #1e3c72, #2a5298);
+  color: #e0e0e0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+}
+
+h1 {
+  margin-bottom: 5px;
+  color: #cce0ff;
+  text-shadow: 1px 1px 3px #00000040;
+}
+
+h2 {
+  color: #cce0ff;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.profile-photo {
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border: 3px solid #cce0ff;
+  margin-bottom: 1rem;
+}
+
+p {
+  color: #d0d0d0;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+button {
+  background-color: #3a5f9e;
+  color: #e0e0e0;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+  margin: 0.3rem 0;
+}
+
+button:hover {
+  background-color: #2e4d8a;
+}
+
+input,
+select {
+  padding: 0.2rem 0.4rem;
+  margin: 0.5rem auto;
+  border-radius: 6px;
+  border: none;
+  width: 200px;
+  max-width: 90%;
+  display: block;
+  background-color: #ffffffef;
+  color: #1e3c72;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.family-form {
+  background-color: #3a5f9e80;
+  padding: 1rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  margin-bottom: 1rem;
+  display: none;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.family-form.show {
+  display: flex;
+}
+
+.family-select {
+  background-color: #3a5f9e80;
+  padding: 1rem;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+#diceResult {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #3a5f9e80;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  font-weight: bold;
+  color: #e0e0e0;
+}
+
+.history {
+  margin-top: 2rem;
+  width: 90%;
+  max-width: 400px;
+  background-color: #3a5f9e80;
+  border-radius: 10px;
+  padding: 1rem;
+  color: #e0e0e0;
+}
+
+.history h2 {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.history ul {
+  list-style: none;
+}
+
+.history li {
+  padding: 0.5rem;
+  border-bottom: 1px solid #2e4d8a;
+}
+
+@media (max-width: 500px) {
+  input,
+  select,
+  button {
+    width: 100%;
+  }
+
+  .profile-photo {
+    width: 80px;
+    height: 80px;
+  }
+  h1 {
+    font-size: 25px;
+  }
+}
