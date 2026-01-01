@@ -26,21 +26,14 @@ app.use(
     saveUninitialized: false,
   })
 );
-
 app.use(passport.initialize());
 app.use(passport.session());
 
 // =======================
-// RUTAS
+// Rutas básicas
 // =======================
-
-// Redirigir a login
 app.get("/", (req, res) => res.redirect("/login"));
-
-// Login
 app.get("/login", (req, res) => res.render("login"));
-
-// Home
 app.get("/home", async (req, res) => {
   if (!req.user) return res.redirect("/login");
   const user = await User.findById(req.user.id);
@@ -52,68 +45,39 @@ app.get(
   "/auth/google",
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
-
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
   (req, res) => res.redirect("/home")
 );
-
 app.get("/auth/logout", (req, res) => {
   req.logout(() => res.redirect("/login"));
 });
 
-// -----------------------
-// Lançar dado para el usuario actual
-// -----------------------
-app.get("/task/random/:dice", async (req, res) => {
+// =======================
+// Rutas de tareas
+// =======================
+
+// Lanzar dado para el usuario actual
+app.get("/task/random/:dice?", async (req, res) => {
   if (!req.user) return res.status(401).json({ error: "No logueado" });
 
   try {
     const user = await User.findById(req.user.id);
-
-    // Usar assignedTasks si tiene, si no usar Task DB
     let availableTasks =
       user.assignedTasks && user.assignedTasks.length > 0
         ? user.assignedTasks
         : await Task.find({});
-
     if (!availableTasks || availableTasks.length === 0)
       return res.json({ task: null });
 
     const randomIndex = Math.floor(Math.random() * availableTasks.length);
     const task = availableTasks[randomIndex];
 
-    // Guardar en historial si no está
     if (!user.tasks.some((t) => t._id.equals(task._id))) {
       user.tasks.push(task);
       await user.save();
     }
-
-    res.json({ task });
-  } catch (err) {
-    console.error("Error al obtener tarea:", err);
-    res.status(500).json({ error: "Error al obtener la tarea" });
-  }
-});
-
-// Lanzar dado por email
-app.get("/task/random-by-email/:email", async (req, res) => {
-  if (!req.user) return res.status(401).json({ error: "No logueado" });
-
-  const email = req.params.email;
-  try {
-    const user = await User.findOne({ email });
-    if (!user || !user.assignedTasks || user.assignedTasks.length === 0) {
-      return res.json({ task: null });
-    }
-
-    const randomIndex = Math.floor(Math.random() * user.assignedTasks.length);
-    const task = user.assignedTasks[randomIndex];
-
-    user.tasks.push(task); // historial
-    user.assignedTasks.splice(randomIndex, 1); // eliminar para no repetir
-    await user.save();
 
     res.json({ task });
   } catch (err) {
@@ -122,91 +86,29 @@ app.get("/task/random-by-email/:email", async (req, res) => {
   }
 });
 
-// Borrar historial por email
-app.post("/tasks/clear/:email", async (req, res) => {
-  if (!req.user) return res.status(401).json({ error: "No logueado" });
-
-  try {
-    const user = await User.findOne({ email: req.params.email });
-    if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
-
-    user.tasks = [];
-    await user.save();
-    res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error al borrar historial" });
-  }
-});
-
-// Borrar historial de un familiar
-app.post("/tasks/clear/:email", async (req, res) => {
-  if (!req.user) return res.status(401).json({ error: "No logueado" });
-
-  const email = req.params.email;
-  try {
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
-
-    user.tasks = [];
-    await user.save();
-
-    res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error al borrar historial" });
-  }
-});
-
-// -----------------------
-// Borrar historial
-// -----------------------
-app.post("/tasks/clear", async (req, res) => {
-  if (!req.user) return res.status(401).json({ error: "No logueado" });
-
-  try {
-    const user = await User.findById(req.user.id);
-    user.tasks = [];
-    await user.save();
-    res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Error al borrar historial" });
-  }
-});
-
-// Lanzar dado para un familiar
+// Lanzar dado por email/familiar
 app.get("/task/random-by-email/:email", async (req, res) => {
   if (!req.user) return res.status(401).json({ error: "No logueado" });
 
-  const email = req.params.email;
-
   try {
+    const { email } = req.params;
     const user = await User.findOne({ email });
     if (!user) return res.json({ task: null });
 
-    // --- Paso 1: Tareas ya usadas ---
     const usedTaskIds = user.tasks.map((t) => t.taskId?.toString());
-
-    // --- Paso 2: Si assignedTasks está vacío, inyectar nuevas tareas desde DB ---
     if (!user.assignedTasks || user.assignedTasks.length === 0) {
       const newTasks = await Task.find({ _id: { $nin: usedTaskIds } });
-
       user.assignedTasks = newTasks.map((t) => ({
         taskId: t._id,
         title: t.title,
         description: t.description,
       }));
-
       await user.save();
     }
 
-    // --- Paso 3: Si sigue vacío, no hay tareas ---
-    if (!user.assignedTasks || user.assignedTasks.length === 0) {
+    if (!user.assignedTasks || user.assignedTasks.length === 0)
       return res.json({ task: null });
-    }
 
-    // --- Paso 4: Elegir tarea aleatoria ---
     const randomIndex = Math.floor(Math.random() * user.assignedTasks.length);
     const task = user.assignedTasks[randomIndex];
 
@@ -221,12 +123,17 @@ app.get("/task/random-by-email/:email", async (req, res) => {
   }
 });
 
-app.get("/user/tasks/:email", async (req, res) => {
+// Obtener historial
+app.get("/user/tasks/:email?", async (req, res) => {
   if (!req.user) return res.status(401).json({ error: "No logueado" });
 
-  const { email } = req.params;
   try {
-    const user = await User.findOne({ email });
+    let user;
+    if (req.params.email) {
+      user = await User.findOne({ email: req.params.email });
+    } else {
+      user = await User.findById(req.user.id);
+    }
     if (!user) return res.json({ tasks: [] });
 
     res.json({ tasks: user.tasks });
@@ -236,6 +143,38 @@ app.get("/user/tasks/:email", async (req, res) => {
   }
 });
 
-// Servidor
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+// Borrar historial (propio o de familiar)
+app.post("/tasks/clear/:email?", async (req, res) => {
+  if (!req.user) return res.status(401).json({ error: "No logueado" });
+
+  try {
+    let user;
+    if (req.params.email) {
+      user = await User.findOne({ email: req.params.email });
+    } else {
+      user = await User.findById(req.user.id);
+    }
+
+    if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
+
+    user.tasks = [];
+    await user.save();
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Error al borrar historial" });
+  }
+});
+
+// =======================
+// Levantar servidor solo en local
+// =======================
+if (process.env.NODE_ENV !== "vercel") {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+}
+
+// =======================
+// Exportar app para Vercel
+// =======================
+module.exports = app;
